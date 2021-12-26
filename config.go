@@ -10,5 +10,5 @@ type Proxy struct {
 }
 
 type Backend struct {
-	Port string `json:"port"`
+	URL string `json:"url"`
 }

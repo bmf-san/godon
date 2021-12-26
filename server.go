@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
+	"time"
 )
 
 func Serve() {
@@ -16,9 +19,20 @@ func Serve() {
 	var cfg Config
 	json.Unmarshal(data, &cfg)
 
-	director := func(request *http.Request) {
-		request.URL.Scheme = "http"
-		request.URL.Host = ":8081"
+	director := func(req *http.Request) {
+		// Randomly select backend to load balance
+		backends := cfg.Backends
+		var targetURL *url.URL
+		for i, b := range backends {
+			rand.Seed(time.Now().UnixNano())
+			if rand.Intn(3) == i {
+				targetURL, err = url.Parse(b.URL)
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+			}
+		}
+		req.URL = targetURL
 	}
 	rp := &httputil.ReverseProxy{
 		Director: director,
