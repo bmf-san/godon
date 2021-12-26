@@ -8,7 +8,7 @@ import (
 	"github.com/bmf-san/godon"
 )
 
-func serveOrigin(name string, port string) {
+func serveBackend(name string, port string) {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -26,17 +26,17 @@ func main() {
 	}()
 
 	go func() {
-		serveOrigin("web1", ":8081")
+		serveBackend("web1", ":8081")
 		wg.Done()
 	}()
 
 	go func() {
-		serveOrigin("web2", ":8082")
+		serveBackend("web2", ":8082")
 		wg.Done()
 	}()
 
 	go func() {
-		serveOrigin("web3", ":8083")
+		serveBackend("web3", ":8083")
 		wg.Done()
 	}()
 
