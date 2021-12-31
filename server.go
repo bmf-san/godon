@@ -86,7 +86,7 @@ func isAlive(url *url.URL) bool {
 
 // healthCheck is a function for healthcheck
 func healthCheck() {
-	t := time.NewTicker(time.Second * 1)
+	t := time.NewTicker(time.Minute * 1)
 	for {
 		select {
 		case <-t.C:
