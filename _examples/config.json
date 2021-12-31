@@ -1,6 +1,7 @@
 {
 	"proxy": {
-		"port": "8080"
+		"port": "8080",
+		"active_check_timeout": "2"
 	},
 	"backends": [
 		{
@@ -11,6 +12,9 @@
 		},
 		{
 			"url": "http://localhost:8083/"
+		},
+		{
+			"url": "http://localhost:8084/"
 		}
 	]
 }

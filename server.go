@@ -10,52 +10,81 @@ import (
 	"sync"
 )
 
+// Config is a configuration.
 type Config struct {
 	Proxy    Proxy     `json:"proxy"`
 	Backends []Backend `json:"backends"`
 }
 
+// Proxy is a reverse proxy, and means load balancer.
 type Proxy struct {
 	Port string `json:"port"`
 }
 
+// Backend is servers which load balancer is transferred.
 type Backend struct {
-	URL string `json:"url"`
+	URL    string `json:"url"`
+	IsDead bool
+	mu     sync.RWMutex
 }
 
+// SetDead updates the value of IsDead in Backend.
+func (backend *Backend) SetDead(b bool) {
+	backend.mu.Lock()
+	backend.IsDead = b
+	backend.mu.Unlock()
+}
+
+// GetIsDead returns the value of IsDead in Backend.
+func (backend *Backend) GetIsDead() bool {
+	backend.mu.RLock()
+	isAlive := backend.IsDead
+	backend.mu.RUnlock()
+	return isAlive
+}
+
+var mu sync.Mutex
+var idx int = 0
+
+// lbHandler is a handler for loadbalancing
+func lbHandler(w http.ResponseWriter, r *http.Request) {
+	maxLen := len(cfg.Backends)
+	// Round Robin
+	mu.Lock()
+	currentBackend := cfg.Backends[idx%maxLen]
+	if currentBackend.GetIsDead() {
+		idx++
+	}
+	targetURL, err := url.Parse(cfg.Backends[idx%maxLen].URL)
+	log.Printf("%v", targetURL)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	idx++
+	mu.Unlock()
+	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
+	reverseProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, e error) {
+		// NOTE: It is better to implement retry.
+		log.Printf("%v is dead.", targetURL)
+		currentBackend.SetDead(true)
+		lbHandler(w, r)
+	}
+	reverseProxy.ServeHTTP(w, r)
+}
+
+var cfg Config
+
+// Serve serves a loadbalancer.
 func Serve() {
 	data, err := ioutil.ReadFile("./config.json")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	var cfg Config
 	json.Unmarshal(data, &cfg)
 
-	var idx int = 0
-	maxLen := len(cfg.Backends)
-	var mu sync.Mutex
-	director := func(req *http.Request) {
-		// Round Robin
-		mu.Lock()
-		backend := cfg.Backends[idx]
-		var targetURL *url.URL
-		targetURL, err = url.Parse(backend.URL)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		req.URL = targetURL
-		idx++
-		if idx == maxLen {
-			idx = 0
-		}
-		mu.Unlock()
-	}
-	rp := &httputil.ReverseProxy{
-		Director: director,
-	}
 	s := http.Server{
 		Addr:    ":" + cfg.Proxy.Port,
-		Handler: rp,
+		Handler: http.HandlerFunc(lbHandler),
 	}
 	if err = s.ListenAndServe(); err != nil {
 		log.Fatal(err.Error())

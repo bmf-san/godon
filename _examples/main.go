@@ -20,7 +20,7 @@ func serveBackend(name string, port string) {
 
 func main() {
 	wg := new(sync.WaitGroup)
-	wg.Add(4)
+	wg.Add(5)
 
 	go func() {
 		godon.Serve()
@@ -39,6 +39,11 @@ func main() {
 
 	go func() {
 		serveBackend("web3", ":8083")
+		wg.Done()
+	}()
+
+	go func() {
+		serveBackend("web4", ":8084")
 		wg.Done()
 	}()
 
