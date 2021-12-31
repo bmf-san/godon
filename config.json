@@ -1,7 +1,6 @@
 {
 	"proxy": {
-		"port": "8080",
-		"active_check_timeout": "2"
+		"port": "8080"
 	},
 	"backends": [
 		{
