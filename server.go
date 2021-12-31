@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"sync"
 )
 
 func Serve() {
@@ -19,8 +20,10 @@ func Serve() {
 
 	var idx int = 0
 	maxLen := len(cfg.Backends)
+	var mu sync.Mutex
 	director := func(req *http.Request) {
 		// Round Robin
+		mu.Lock()
 		backend := cfg.Backends[idx]
 		var targetURL *url.URL
 		targetURL, err = url.Parse(backend.URL)
@@ -32,6 +35,7 @@ func Serve() {
 		if idx == maxLen {
 			idx = 0
 		}
+		mu.Unlock()
 	}
 	rp := &httputil.ReverseProxy{
 		Director: director,
