@@ -1,5 +1,5 @@
-# golb
-Golb is a simple load balancer built with golang.
+# godon
+Godon is a simple load balancer built with golang.
 
 # Features
 - Load Balancing Algorithm
@@ -11,4 +11,4 @@ Golb is a simple load balancer built with golang.
 See examples.
 
 # Appendix
-// TODO: dev.to link
+- [dev.to - bmf_san/implement-a-load-balancer-in-golang-8gj](https://dev.to/bmf_san/implement-a-load-balancer-in-golang-8gj)
