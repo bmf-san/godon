@@ -27,7 +27,7 @@ type Proxy struct {
 type Backend struct {
 	URL    string `json:"url"`
 	IsDead bool
-	mu     sync.RWMutex
+	mu     *sync.RWMutex
 }
 
 // SetDead updates the value of IsDead in Backend.
@@ -77,7 +77,7 @@ func lbHandler(w http.ResponseWriter, r *http.Request) {
 func isAlive(url *url.URL) bool {
 	conn, err := net.DialTimeout("tcp", url.Host, time.Minute*1)
 	if err != nil {
-		log.Printf("Unreachable to %v, error:", url.Host, err.Error())
+		log.Printf("Unreachable to %v, error:%v", url.Host, err.Error())
 		return false
 	}
 	defer conn.Close()
