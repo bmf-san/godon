@@ -27,7 +27,7 @@ type Proxy struct {
 type Backend struct {
 	URL    string `json:"url"`
 	IsDead bool
-	mu     *sync.RWMutex
+	mu     sync.RWMutex
 }
 
 // SetDead updates the value of IsDead in Backend.
